@@ -4,12 +4,13 @@
 #include <string>
 #include <algorithm>
 
-typedef std::map<std::string, void(*)()> TestMap;
+typedef void(*voidFunc)();
+typedef std::map<std::string, void(*)()> Tests;
 
 class TestFramework {
   public:
     static void doNothing() {}
-    static void executeTests(TestMap&& tests) {
+    static void executeTests(Tests&& tests) {
         // TODO: Make this like an actual test framework spinning up test
         // environment, parallelizing operations, pretty printing results,
         // etc. instead of just executing test functions in series.
@@ -19,6 +20,23 @@ class TestFramework {
             test.second();
         });
     }
+};
+
+class TestMap {
+  public:
+    Tests&& getTests() {
+        return std::move(data_);
+    }
+
+    void emplace(std::string name, voidFunc&& func) {
+        if (data_.count(name)) {
+            throw std::runtime_error("Duplicate test name: " + name);
+        }
+
+        data_.emplace(name, func);
+    }
+  private:
+    Tests data_;
 };
 
 /*
@@ -33,7 +51,7 @@ class TestFramework {
 // Create test class and start writing executeTests_ function
 #define TEST_FILE class TestClass_ { \
   public: \
-    static TestMap getTests_() { \
+    static TestMap getTestMap() { \
         TestMap tests_; \
         TestFramework::doNothing(
 
@@ -43,5 +61,15 @@ class TestFramework {
     return std::move(tests_); \
 } \
 }; \
-int main() { TestFramework::executeTests(TestClass_::getTests_()); }
+int main() { \
+    try { \
+        TestFramework::executeTests(TestClass_::getTestMap().getTests()); \
+    } catch (std::exception& e) { \
+        std::cout << "Tests did not execute properly, with error:\n    " \
+            << e.what() << std::endl; \
+        return 1; \
+    } \
+    return 0; \
+}
+
 
