@@ -4,6 +4,7 @@
 #include <string>
 #include <algorithm>
 #include <unordered_map>
+#include <unordered_set>
 
 typedef std::unique_ptr<std::vector<std::string>> OutputPtr;
 OutputPtr getLines(char* inStr) {
@@ -54,18 +55,6 @@ int main(int argc, char** argv) {
     auto expected = getLines(argv[1]);
     auto actual = getLines(argv[2]);
 
-    // first simply check size and fail if non-identical
-    if (expected->size() != actual->size()) {
-        std::string message = build_string({
-                "Output mismatch. Expected ",
-                std::to_string(expected->size()),
-                " lines but got ",
-                std::to_string(actual->size()),
-                " lines."}) ;
-        return exitAndPrint(
-                std::move(message), std::move(expected), std::move(actual));
-    }
-
     // Parse the expected output into sets of groups of lines based on
     // indentation. Map topLevel line --> indented lines
     std::unordered_map<std::string, std::vector<std::string>> groups;
@@ -86,8 +75,10 @@ int main(int argc, char** argv) {
     groups.emplace(topLevel, std::move(indented));
 
     size_t actualPtr = 0;
+    std::unordered_set<std::string> actualTopLevelLinesFound;
     while (actualPtr < actual->size()) {
         std::string& topLevel = actual->at(actualPtr);
+        actualTopLevelLinesFound.insert(topLevel);
         if (!groups.count(topLevel)) {
             return exitAndPrint(
                     build_string({
@@ -123,6 +114,25 @@ int main(int argc, char** argv) {
             }
         }
         ++actualPtr;
+    }
+
+    if (actualTopLevelLinesFound.size() < groups.size()) {
+        std::stringstream message;
+        message << "Didn't find the following expected lines in output:\n";
+        std::for_each(
+                groups.begin(),
+                groups.end(),
+                [&actualTopLevelLinesFound, &message](
+                        std::pair<std::string, std::vector<std::string>> pair) {
+            if (!actualTopLevelLinesFound.count(pair.first)) {
+                message << "    " << pair.first << std::endl;
+                for (const auto& line : pair.second) {
+                    message << "    " << line << std::endl;
+                }
+            }
+        });
+
+        return exitAndPrint(message.str(), std::move(expected), std::move(actual));
     }
 
     // Passed successfully
