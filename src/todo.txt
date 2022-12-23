@@ -7,6 +7,7 @@ Main Library
 - Probably use 2 vectors (name, functionPtr) instead of mapping them
 - Pretty print?
 - Assert functions?
+- Allow multiple test files in same test run? Just need main to live outside of macros and have the END_FILE macro provide a way for tests to identify themselves to main. Perhaps adding an ID to a singleton test runner.
 
 
 Meta Test Framework
