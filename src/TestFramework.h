@@ -10,16 +10,22 @@ typedef std::map<std::string, void(*)()> Tests;
 class TestFramework {
   public:
     static void doNothing() {}
-    static void executeTests(Tests&& tests) {
+
+    explicit TestFramework(Tests&& tests): tests_(tests) {}
+
+    void executeTests() {
         // TODO: Make this like an actual test framework spinning up test
         // environment, parallelizing operations, pretty printing results,
         // etc. instead of just executing test functions in series.
-        std::for_each(tests.begin(), tests.end(),
+        std::for_each(tests_.begin(), tests_.end(),
                 [](std::pair<std::string, void(*)()> test) {
             std::cout << "Executing: " << test.first << std::endl;
             test.second();
         });
     }
+    
+  private:
+    Tests tests_;
 };
 
 class TestMap {
@@ -55,15 +61,18 @@ class TestMap {
         TestMap tests_; \
         TestFramework::doNothing(
 
+// Close previous test, open new one
 #define TEST(name) ); tests_.emplace(name, []()
 
+// Close previous test, return, add main method for execution
 #define END_TEST_FILE ); \
     return std::move(tests_); \
 } \
 }; \
 int main() { \
     try { \
-        TestFramework::executeTests(TestClass_::getTestMap().getTests()); \
+        TestFramework t(TestClass_::getTestMap().getTests());\
+        t.executeTests(); \
     } catch (std::exception& e) { \
         std::cout << "Tests did not execute properly, with error:\n    " \
             << e.what() << std::endl; \
