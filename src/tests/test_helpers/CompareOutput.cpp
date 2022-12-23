@@ -3,6 +3,7 @@
 #include <vector>
 #include <string>
 #include <algorithm>
+#include <unordered_map>
 
 typedef std::unique_ptr<std::vector<std::string>> OutputPtr;
 OutputPtr getLines(char* inStr) {
@@ -65,20 +66,63 @@ int main(int argc, char** argv) {
                 std::move(message), std::move(expected), std::move(actual));
     }
 
-    // TODO: Account for tests out of order due to parallel runs
-    for (size_t i = 0; i < expected->size(); ++i) {
-        if (expected->at(i) != actual->at(i)) {
-            std::string message = build_string({
-                    "Output mistmatch on line ",
-                    std::to_string(i + 1),
-                    ":\nExpected: \"",
-                    expected->at(i),
-                    "\"\nReceived: \"",
-                    actual->at(i),
-                    "\""});
-            return exitAndPrint(
-                    std::move(message), std::move(expected), std::move(actual));
+    // Parse the expected output into sets of groups of lines based on
+    // indentation. Map topLevel line --> indented lines
+    std::unordered_map<std::string, std::vector<std::string>> groups;
+    std::string topLevel = expected->at(0);
+    std::vector<std::string> indented;
+    for (size_t i = 1; i < expected->size(); ++i) {
+        // Indented
+        if (expected->at(i)[0] == ' ') {
+            indented.push_back(expected->at(i));
+            continue;
         }
+
+        // Otherwise we're ready to add a group and start the next one
+        groups.emplace(topLevel, std::move(indented));
+        indented = std::vector<std::string>();
+        topLevel = expected->at(i);
+    }
+    groups.emplace(topLevel, std::move(indented));
+
+    size_t actualPtr = 0;
+    while (actualPtr < actual->size()) {
+        std::string& topLevel = actual->at(actualPtr);
+        if (!groups.count(topLevel)) {
+            return exitAndPrint(
+                    build_string({
+                        "Got unexpected line in output: \"",
+                        topLevel,
+                        "\""}),
+                    std::move(expected),
+                    std::move(actual));
+        }
+        const auto& indented = groups.at(topLevel);
+        for (size_t i = 0; i < indented.size(); ++i) {
+            if (actualPtr == actual->size()) {
+                return exitAndPrint(
+                        build_string({
+                            "Output ended before expected line: \"",
+                            indented.at(i),
+                            "\""}),
+                        std::move(expected),
+                        std::move(actual));
+            }
+            if (indented.at(i) != actual->at(++actualPtr)) {
+                return exitAndPrint(
+                        build_string({
+                            "Unexpected line: ",
+                            expected->at(actualPtr),
+                            "\"\n    shortly after \"",
+                            topLevel,
+                            "\"\n Expected: \"",
+                            indented.at(i),
+                            "\""}),
+                        std::move(expected),
+                        std::move(actual));
+            }
+        }
+        ++actualPtr;
     }
 
     // Passed successfully
