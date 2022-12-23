@@ -3,6 +3,7 @@
 TEST_NAMES="
 BasicTest
 DuplicateNameTest
+FailedAssertion
 "
 
 declare -i total=0

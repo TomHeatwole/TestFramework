@@ -3,14 +3,15 @@ README
 - "Development" explaining the meta test framework and how to use it.
 
 Main Library
-- Parallel
 - Probably use 2 vectors (name, functionPtr) instead of mapping them
 - Pretty print?
-- Assert functions?
+- Assert functions
+    - Allow string input for more detail
+    - Also Expect functions?
+    - Any way to capture line # or similar helpful info where failure occurred?
 - Allow multiple test files in same test run? Just need main to live outside of macros and have the END_FILE macro provide a way for tests to identify themselves to main. Perhaps adding an ID to a singleton test runner.
 
 
 Meta Test Framework
-- Better output on mismatch 
-- Once we have parallel, we'll want smart comparison of outputs. Probably create a separate cpp binary to send both output strings to for comparison.
-- We could also expose a non-parallel version, just for meta testing
+- smart comparison of outputs which allows them out of order.
+    - Alternatively, we could just expose a non-parallel version, just for meta testing

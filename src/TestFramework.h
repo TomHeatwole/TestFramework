@@ -10,6 +10,14 @@ typedef std::map<std::string, void(*)()> Tests;
 
 class TestFramework {
   public:
+    static void assert_(bool condition) {
+        if (!condition) {
+            // TODO: Create assertion error classes
+            // TODO: Improve error messaging
+            throw std::runtime_error("Assertion failure.");
+        }
+    }
+
     static void doNothing() {}
 
     explicit TestFramework(Tests&& tests): tests_(tests) {}
@@ -19,15 +27,22 @@ class TestFramework {
         // environment, parallelizing operations, pretty printing results,
         // etc. instead of just executing test functions in series.
         std::vector<std::thread> testThreads;
+        printLine(
+                std::string("Executing ") +
+                std::to_string(tests_.size()) +
+                std::string(" tests:"));
         std::for_each(tests_.begin(), tests_.end(),
                 [this, &testThreads](std::pair<std::string, void(*)()> test) mutable {
             // TODO: look into batching or a max thread count w/ semaphore
             testThreads.emplace_back([this, test = std::move(test)]() mutable {
-                printLine(std::string("Executing: ") + test.first);
                 try {
                     test.second();
+                    printLine(test.first + std::string("...OK"));
                 } catch (std::exception &e) {
-                    printLine(std::string("    failed with exception: ") + e.what());
+                    printLines({
+                        test.first + std::string("..."),
+                        std::string("    failed with exception: ") + e.what()
+                    });
                 }
             });
         });
@@ -37,9 +52,15 @@ class TestFramework {
         }
     }
 
-    void printLine(std::string str) {
+    void printLines(std::initializer_list<std::string> lines) {
         std::lock_guard g(printMutex_);
-        std::cout << str << std::endl;
+        std::for_each(lines.begin(), lines.end(), [](std::string line) {
+            std::cout << line << std::endl;
+        });
+    }
+
+    void printLine(std::string line) {
+        printLines({std::move(line)});
     }
     
   private:
@@ -102,5 +123,7 @@ int main() { \
     } \
     return 0; \
 }
+
+#define ASSERT(condition) TestFramework::assert_(condition)
 
 
