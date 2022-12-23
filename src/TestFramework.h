@@ -3,6 +3,7 @@
 #include <map>
 #include <string>
 #include <algorithm>
+#include <thread>
 
 typedef void(*voidFunc)();
 typedef std::map<std::string, void(*)()> Tests;
@@ -17,15 +18,36 @@ class TestFramework {
         // TODO: Make this like an actual test framework spinning up test
         // environment, parallelizing operations, pretty printing results,
         // etc. instead of just executing test functions in series.
+        std::vector<std::thread> testThreads;
         std::for_each(tests_.begin(), tests_.end(),
-                [](std::pair<std::string, void(*)()> test) {
-            std::cout << "Executing: " << test.first << std::endl;
-            test.second();
+                [this, &testThreads](std::pair<std::string, void(*)()> test) mutable {
+            // TODO: look into batching or a max thread count w/ semaphore
+            testThreads.push_back(std::thread([this, test = std::move(test)]() mutable {
+                printLine(std::string("Executing: ") + test.first);
+                try {
+                    test.second();
+                } catch (std::exception &e) {
+                    printLine(std::string("    failed with exception: ") + e.what());
+                }
+            }));
         });
+
+        for (auto& thread : testThreads) {
+            thread.join();
+        }
+    }
+
+    void printLine(std::string str) {
+        std::lock_guard g(printMutex_);
+        std::cout << str << std::endl;
     }
     
   private:
     Tests tests_;
+    std::mutex printMutex_;
+    // TODO: Use these to print total success info
+    // std::mutex dataMutex_;
+    // std::set<std::string> failed_;
 };
 
 class TestMap {
