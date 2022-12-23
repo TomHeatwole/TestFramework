@@ -10,24 +10,23 @@ declare -i pass=0
 declare -i fail=0
 declare -i bad_compile=0
 
+g++ -std=c++17 test_helpers/CompareOutput.cpp -o cmp
+
 for f in $TEST_NAMES
 do
     echo "Processing $f.cpp..."
     total=$((total + 1))
     g++ $f.cpp -std=c++17
     if [ $? -eq 0 ]; then
-
         OUTPUT=$(./a.out)
         EXPECTED_OUTPUT=$(cat ${f}_EXPECTED.txt)
 
-        if [ "$OUTPUT" = "$EXPECTED_OUTPUT" ]; then
+        ./cmp "$EXPECTED_OUTPUT" "$OUTPUT"
+        if [ $? -eq 0 ]; then
             echo "...OK"
             pass=$((pass + 1))
         else
             fail=$((fail + 1))
-            echo "Unexpected output:"
-            echo ${OUTPUT}
-            echo 
         fi
     else
         bad_compile=$((bad_compile + 1))
