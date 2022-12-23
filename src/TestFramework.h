@@ -22,14 +22,14 @@ class TestFramework {
         std::for_each(tests_.begin(), tests_.end(),
                 [this, &testThreads](std::pair<std::string, void(*)()> test) mutable {
             // TODO: look into batching or a max thread count w/ semaphore
-            testThreads.push_back(std::thread([this, test = std::move(test)]() mutable {
+            testThreads.emplace_back([this, test = std::move(test)]() mutable {
                 printLine(std::string("Executing: ") + test.first);
                 try {
                     test.second();
                 } catch (std::exception &e) {
                     printLine(std::string("    failed with exception: ") + e.what());
                 }
-            }));
+            });
         });
 
         for (auto& thread : testThreads) {
