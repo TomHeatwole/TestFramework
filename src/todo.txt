@@ -1,0 +1,15 @@
+README
+- "Usage" explaining the 3 macros
+- "Development" explaining the meta test framework and how to use it.
+
+Main Library
+- Parallel
+- Probably use 2 vectors (name, functionPtr) instead of mapping them
+- Pretty print?
+- Assert functions?
+
+
+Meta Test Framework
+- Better output on mismatch 
+- Once we have parallel, we'll want smart comparison of outputs. Probably create a separate cpp binary to send both output strings to for comparison.
+- We could also expose a non-parallel version, just for meta testing
