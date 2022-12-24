@@ -1,7 +1,7 @@
 Executing 1 tests:
-FailedAssertion...
-    failed with exception: Assertion failure.
+FailedAssertion...%RED%
+    failed with exception: Assertion failure.%RED%
 
-0 of 1 tests passed.
+0 of 1 tests passed.%BOLD_RED%
 The following tests failed:
-    FailedAssertion
+    FailedAssertion%RED%

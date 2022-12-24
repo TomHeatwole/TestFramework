@@ -6,6 +6,8 @@
 #include <unordered_map>
 #include <unordered_set>
 
+#include "../../PrintHelpers.h"
+
 typedef std::unique_ptr<std::vector<std::string>> OutputPtr;
 OutputPtr getLines(char* inStr) {
     auto lines = std::make_unique<std::vector<std::string>>();
@@ -32,20 +34,6 @@ std::string build_string(std::initializer_list<std::string> in) {
     return out.str();
 }
 
-int exitAndPrint(std::string message, OutputPtr expected, OutputPtr actual) {
-    std::cout << message << std::endl << std::endl;
-    std::cout << "Expected output:" << std::endl;
-    for (const auto& line : *expected) {
-        std::cout << "    " << line << std::endl;
-    }
-    std::cout << "\nActual output:" << std::endl;
-    for (const auto& line : *actual) {
-        std::cout << "    " << line << std::endl;
-    }
-    std::cout << std::endl;
-    return 1;
-}
-
 // True for lines like "-----Test Output-----"
 bool isDashBlock(std::string& line) {
     if (line.size() <= 4) {
@@ -59,6 +47,53 @@ bool isDashBlock(std::string& line) {
 
     return true;
 }
+
+std::string expandColor(std::string& in) {
+    if (in[in.size() - 1] != '%') {
+        return in;
+    }
+
+    auto idx = in.find('%');
+    std::string color = in.substr(idx + 1, in.size() - idx - 2);
+    std::string line = in.substr(0, idx);
+
+    if (color == "RED") {
+        return print::red(line);
+    }
+    if (color == "BOLD_RED") {
+        return print::boldRed(line);
+    }
+    if (color == "GREEN") {
+        return print::green(line);
+    }
+    if (color == "BOLD_GREEN") {
+        return print::boldGreen(line);
+    }
+    if (color == "YELLOW") {
+        return print::yellow(line);
+    }
+    if (color == "BOLD_YELLOW") {
+        return print::boldYellow(line);
+    }
+
+    // Shouldn't fall through but I'll leave this here in case
+    return in;
+}
+
+int exitAndPrint(std::string message, OutputPtr expected, OutputPtr actual) {
+    std::cout << message << std::endl << std::endl;
+    std::cout << "Expected output:" << std::endl;
+    for (auto& line : *expected) {
+        std::cout << "    " << expandColor(line) << std::endl;
+    }
+    std::cout << "\nActual output:" << std::endl;
+    for (const auto& line : *actual) {
+        std::cout << "    " << line << std::endl;
+    }
+    std::cout << std::endl;
+    return 1;
+}
+
 
 int main(int argc, char** argv) {
     if (argc != 3) {
@@ -78,18 +113,18 @@ int main(int argc, char** argv) {
         std::string& line = expected->at(i);
         // Indented
         if (line[0] == ' ') {
-            indented.push_back(line);
+            indented.push_back(expandColor(line));
             continue;
         }
 
         // Need to treat ------ output blocks as indented lines
         if (isDashBlock(line)) {
-            indented.push_back(line);
+            indented.push_back(expandColor(line));
 
             // Capture all lines until the next dash block
             while (++i < expected->size()) {
                 line = expected->at(i);
-                indented.push_back(line);
+                indented.push_back(expandColor(line));
                 if (isDashBlock(line)) {
                     break;
                 }
@@ -101,11 +136,11 @@ int main(int argc, char** argv) {
         }
 
         // Otherwise we're ready to add a group and start the next one
-        groups.emplace(topLevel, std::move(indented));
+        groups.emplace(expandColor(topLevel), std::move(indented));
         indented = std::vector<std::string>();
         topLevel = line;
     }
-    groups.emplace(topLevel, std::move(indented));
+    groups.emplace(expandColor(topLevel), std::move(indented));
 
     size_t actualPtr = 0;
     std::unordered_set<std::string> actualTopLevelLinesFound;
@@ -135,8 +170,8 @@ int main(int argc, char** argv) {
             if (indented.at(i) != actual->at(++actualPtr)) {
                 return exitAndPrint(
                         build_string({
-                            "Unexpected line: ",
-                            expected->at(actualPtr),
+                            "Unexpected line: \"",
+                            actual->at(actualPtr),
                             "\"\n    shortly after \"",
                             topLevel,
                             "\"\n Expected: \"",

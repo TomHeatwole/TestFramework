@@ -1,29 +1,29 @@
 Executing 6 tests:
-NoPrintTest...OK
-NoPrintTest2...OK
-PrintTest...OK
-------Test Stdout------
+NoPrintTest...OK%GREEN%
+NoPrintTest2...OK%GREEN%
+PrintTest...OK%GREEN%
+------Test Stdout-------%YELLOW%
 5 six seven
 
-------------------------
-PrintTest2...OK
-------Test Stdout------
+------------------------%YELLOW%
+PrintTest2...OK%GREEN%
+------Test Stdout-------%YELLOW%
 test2
 abcdefghijklmnopqrstuvwxyz
-------------------------
-------Test Stderr------
+------------------------%YELLOW%
+------Test Stderr-------%YELLOW%
 This is error text
-------------------------
-NoPrintTest3...
-    failed with exception: Assertion failure.
-PrintTest3...
-    failed with exception: Assertion failure.
-------Test Stdout------
+------------------------%YELLOW%
+NoPrintTest3...%RED%
+    failed with exception: Assertion failure.%RED%
+PrintTest3...%RED%
+    failed with exception: Assertion failure.%RED%
+------Test Stdout-------%YELLOW%
 Third print test
 
-------------------------
+------------------------%YELLOW%
 
-4 of 6 tests passed.
+4 of 6 tests passed.%BOLD_YELLOW%
 The following tests failed:
-    NoPrintTest3
-    PrintTest3
+    NoPrintTest3%RED%
+    PrintTest3%RED%
