@@ -2,3 +2,5 @@ Executing 3 tests:
 ExampleTest1...OK
 ExampleTest2...OK
 ExampleTest3...OK
+
+All 3 tests passed!

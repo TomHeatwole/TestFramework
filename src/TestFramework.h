@@ -50,6 +50,8 @@ class TestFramework {
                     testOutput.push_back(
                             std::string("    failed with exception: ")
                             + e.what());
+                    std::lock_guard lg(dataMutex_);
+                    failed_.push_back(test.first);
                 }
                 auto* outStream =
                     getOutPrinter().getStreamForThread(std::this_thread::get_id());
@@ -73,6 +75,25 @@ class TestFramework {
 
         for (auto& thread : testThreads) {
             thread.join();
+        }
+
+        // Print final results
+        std::cout << std::endl;
+        size_t numTests = tests_.size();
+        size_t numFailed = failed_.size();
+        if (numFailed == 0) {
+            std::cout << "All " << std::to_string(numTests)
+                << " tests passed!\n";
+        } else {
+            std::cout << std::to_string(numTests - numFailed) << " of "
+                << numTests << " tests passed.\n";
+            std::cout << "The following tests failed:\n";
+
+            // Print faild in consistent order
+            std::sort(failed_.begin(), failed_.end());
+            for (const auto& name : failed_) {
+                std::cout << "    " << name << std::endl;
+            }
         }
     }
 
@@ -107,9 +128,8 @@ class TestFramework {
 
     Tests tests_;
     std::mutex printMutex_;
-    // TODO: Use these to print total success info
-    // std::mutex dataMutex_;
-    // std::set<std::string> failed_;
+    std::mutex dataMutex_;
+    std::vector<std::string> failed_;
 };
 
 class TestMap {

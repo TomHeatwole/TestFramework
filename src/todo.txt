@@ -2,7 +2,7 @@ README
 - "Usage" explaining the 3 macros
 - "Development" explaining the meta test framework and how to use it.
 
-Main Library
+Core Functionality
 - Probably use 2 vectors (name, functionPtr) instead of mapping them
 - Pretty print?
 - Assert functions
@@ -10,6 +10,11 @@ Main Library
     - Also Expect functions?
     - Any way to capture line # or similar helpful info where failure occurred?
 - Allow multiple test files in same test run? Just need main to live outside of macros and have the END_FILE macro provide a way for tests to identify themselves to main. Perhaps adding an ID to a singleton test runner.
+- Differentiate assertion failures from other exceptions or FATALs when communicating output
+
+Additional Functions
+- Stress test or similar? Specify # runs for each test with concurrency options.
+- Mocking? 
 
 Meta Test Framework
 - Does everything it needs to for now :) 

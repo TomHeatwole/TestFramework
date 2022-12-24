@@ -1,3 +1,7 @@
 Executing 1 tests:
 FailedAssertion...
     failed with exception: Assertion failure.
+
+0 of 1 tests passed.
+The following tests failed:
+    FailedAssertion

@@ -22,3 +22,8 @@ PrintTest3...
 Third print test
 
 ------------------------
+
+4 of 6 tests passed.
+The following tests failed:
+    NoPrintTest3
+    PrintTest3
