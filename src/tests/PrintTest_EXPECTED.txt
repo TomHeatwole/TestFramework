@@ -1,6 +1,21 @@
-Executing 1 tests:
+Executing 6 tests:
+NoPrintTest...OK
+NoPrintTest2...OK
 PrintTest...OK
 ------Test Stdout------
 5 six seven
+
+------------------------
+PrintTest2...OK
+------Test Stdout------
+test2
+abcdefghijklmnopqrstuvwxyz
+------------------------
+NoPrintTest3...
+    failed with exception: Assertion failure.
+PrintTest3...
+    failed with exception: Assertion failure.
+------Test Stdout------
+Third print test
 
 ------------------------

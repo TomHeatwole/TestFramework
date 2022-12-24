@@ -11,7 +11,5 @@ Main Library
     - Any way to capture line # or similar helpful info where failure occurred?
 - Allow multiple test files in same test run? Just need main to live outside of macros and have the END_FILE macro provide a way for tests to identify themselves to main. Perhaps adding an ID to a singleton test runner.
 
-
 Meta Test Framework
-- smart comparison of outputs which allows them out of order.
-    - Alternatively, we could just expose a non-parallel version, just for meta testing
+- Does everything it needs to for now :) 

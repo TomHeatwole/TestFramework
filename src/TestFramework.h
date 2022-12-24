@@ -91,22 +91,25 @@ class TestFramework {
                 (std::pair<std::string, void(*)()> test) mutable {
             // TODO: look into batching or a max thread count w/ semaphore
             testThreads.emplace_back([this, test = std::move(test)]() mutable {
+                std::vector<std::string> testOutput;
                 try {
                     test.second();
-                    printLine(test.first + std::string("...OK"));
+                    testOutput.push_back(test.first + std::string("...OK"));
                 } catch (std::exception &e) {
-                    printLines({
-                        test.first + std::string("..."),
-                        std::string("    failed with exception: ") + e.what()
-                    });
+                    testOutput.push_back(test.first + std::string("..."));
+                    testOutput.push_back(
+                            std::string("    failed with exception: ")
+                            + e.what());
                 }
                 auto* stream =
                     getPrinter().getStreamForThread(std::this_thread::get_id());
                 if (stream) {
-                    std::cout << "------Test Stdout------\n";
-                    std::cout << stream->str() << std::endl;
-                    std::cout << "------------------------\n";
+                    testOutput.emplace_back("------Test Stdout------");
+                    testOutput.push_back(stream->str());
+                    testOutput.emplace_back("------------------------");
                 }
+
+                printLines(testOutput);
             });
         });
 
@@ -115,7 +118,7 @@ class TestFramework {
         }
     }
 
-    void printLines(std::initializer_list<std::string> lines) {
+    void printLines(std::vector<std::string> lines) {
         std::lock_guard g(printMutex_);
         std::for_each(lines.begin(), lines.end(), [](std::string line) {
             std::cout << line << std::endl;

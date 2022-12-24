@@ -46,6 +46,20 @@ int exitAndPrint(std::string message, OutputPtr expected, OutputPtr actual) {
     return 1;
 }
 
+// True for lines like "-----Test Output-----"
+bool isDashBlock(std::string& line) {
+    if (line.size() <= 4) {
+        return false;
+    }
+    for (size_t i = 0; i < 4; ++i) {
+        if (line[i] != '-') {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 int main(int argc, char** argv) {
     if (argc != 3) {
         throw std::runtime_error("Expected exactly 2 outputs to comapre");
@@ -61,16 +75,35 @@ int main(int argc, char** argv) {
     std::string topLevel = expected->at(0);
     std::vector<std::string> indented;
     for (size_t i = 1; i < expected->size(); ++i) {
+        std::string& line = expected->at(i);
         // Indented
-        if (expected->at(i)[0] == ' ') {
-            indented.push_back(expected->at(i));
+        if (line[0] == ' ') {
+            indented.push_back(line);
+            continue;
+        }
+
+        // Need to treat ------ output blocks as indented lines
+        if (isDashBlock(line)) {
+            indented.push_back(line);
+
+            // Capture all lines until the next dash block
+            while (++i < expected->size()) {
+                line = expected->at(i);
+                indented.push_back(line);
+                if (isDashBlock(line)) {
+                    break;
+                }
+            }
+
+            // Now we've added all these lines as if they were indented.
+            // We're ready to process the next line as normal.
             continue;
         }
 
         // Otherwise we're ready to add a group and start the next one
         groups.emplace(topLevel, std::move(indented));
         indented = std::vector<std::string>();
-        topLevel = expected->at(i);
+        topLevel = line;
     }
     groups.emplace(topLevel, std::move(indented));
 
