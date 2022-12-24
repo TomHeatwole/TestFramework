@@ -5,6 +5,8 @@
 #include <algorithm>
 #include <thread>
 #include <sstream>
+#include <shared_mutex>
+#include <unordered_map>
 
 typedef void(*voidFunc)();
 typedef std::map<std::string, void(*)()> Tests;
@@ -12,22 +14,44 @@ typedef std::map<std::string, void(*)()> Tests;
 // For capturing the std::out and std::err during test runs
 struct TestPrinter {
   public:
-    TestPrinter() : ss_() {
+    TestPrinter() : streamMutex_() {};
+    std::stringstream* getStreamForThread(std::thread::id id) {
+        std::shared_lock r_lock(streamMutex_);
+        if (streams.count(id)) {
+            return &(streams.at(id));
+        }
+
+        return nullptr;
     }
 
     std::ostream& getStream() {
-        if (startedTestRun_) {
-            return ss_;
+        const auto this_id = std::this_thread::get_id();
+        if (startedTestRun_ && this_id != mainThread_) {
+            // See if we already have a stream for this thread
+            auto* stream = getStreamForThread(this_id);
+            if (stream) {
+                return *stream;
+            }
+
+            // If we don't we need to lock the writer ability on the lock and
+            // add a new stream
+            std::unique_lock w_lock(streamMutex_);
+            streams.emplace(this_id, std::stringstream());
+            return streams.at(this_id);
         }
+
         return std::cout;
     }
 
-  void startTests() {
+  void startTests(std::thread::id id) {
       startedTestRun_ = true;
+      mainThread_ = id;
   }
 
   private:
-    std::stringstream ss_;
+    std::unordered_map<std::thread::id, std::stringstream> streams;
+    std::shared_mutex streamMutex_;
+    std::thread::id mainThread_;
     bool startedTestRun_ = false;
 };
 
@@ -43,19 +67,12 @@ class TestFramework {
 
     static void doNothing() {}
 
-    explicit TestFramework(Tests&& tests): tests_(tests) {}
+    explicit TestFramework(Tests&& tests): tests_(tests) {
+    }
 
     static TestPrinter& getPrinter() {
         static TestPrinter printer;
         return printer;
-    }
-
-    static std::ostream& getPrintStream() {
-        return getPrinter().getStream();
-    }
-
-    static void capturePrintOutput() {
-        getPrinter().startTests();
     }
 
     void executeTests() {
@@ -67,9 +84,11 @@ class TestFramework {
                 std::string("Executing ") +
                 std::to_string(tests_.size()) +
                 std::string(" tests:"));
-        // TODO: Capture print outputs from here 
+        getPrinter().startTests(std::this_thread::get_id());
+
         std::for_each(tests_.begin(), tests_.end(),
-                [this, &testThreads](std::pair<std::string, void(*)()> test) mutable {
+                [this, &testThreads]
+                (std::pair<std::string, void(*)()> test) mutable {
             // TODO: look into batching or a max thread count w/ semaphore
             testThreads.emplace_back([this, test = std::move(test)]() mutable {
                 try {
@@ -80,6 +99,13 @@ class TestFramework {
                         test.first + std::string("..."),
                         std::string("    failed with exception: ") + e.what()
                     });
+                }
+                auto* stream =
+                    getPrinter().getStreamForThread(std::this_thread::get_id());
+                if (stream) {
+                    std::cout << "------Test Stdout------\n";
+                    std::cout << stream->str() << std::endl;
+                    std::cout << "------------------------\n";
                 }
             });
         });
@@ -99,7 +125,7 @@ class TestFramework {
     void printLine(std::string line) {
         printLines({std::move(line)});
     }
-    
+
   private:
     Tests tests_;
     std::mutex printMutex_;
@@ -114,6 +140,13 @@ class TestMap {
         return std::move(data_);
     }
 
+    TestMap(): data_() {
+    }
+
+    TestMap(TestMap&& otherMap) {
+        data_ = std::move(otherMap.data_);
+    }
+
     void emplace(std::string name, voidFunc&& func) {
         if (data_.count(name)) {
             throw std::runtime_error("Duplicate test name: " + name);
@@ -123,7 +156,6 @@ class TestMap {
     }
   private:
     Tests data_;
-    TestPrinter printer_;
 };
 
 // Putting this in namespace std so we can overwrite what std::out does
@@ -131,7 +163,7 @@ namespace std {
 struct TestFrameworkGlobalHelper_ {
   public:
     static ostream& getPrintStream_() {
-        return TestFramework::getPrintStream();
+        return TestFramework::getPrinter().getStream();
     }
 };
 } // namespace std
@@ -162,7 +194,7 @@ struct TestFrameworkGlobalHelper_ {
 }; \
 int main() { \
     try { \
-        TestFramework t(TestClass_::getTestMap().getTests());\
+        TestFramework t(TestClass_::getTestMap().getTests()); \
         t.executeTests(); \
     } catch (std::exception& e) { \
         std::cout << "Tests did not execute properly, with error:\n    " \

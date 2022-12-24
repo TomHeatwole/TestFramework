@@ -1,0 +1,6 @@
+Executing 1 tests:
+PrintTest...OK
+------Test Stdout------
+5 six seven
+
+------------------------
