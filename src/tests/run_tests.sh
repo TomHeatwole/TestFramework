@@ -19,7 +19,7 @@ do
     total=$((total + 1))
     g++ $f.cpp -std=c++17
     if [ $? -eq 0 ]; then
-        OUTPUT=$(./a.out)
+        OUTPUT=$(bash -c '(./a.out)' 2>&1)
         EXPECTED_OUTPUT=$(cat ${f}_EXPECTED.txt)
 
         ./cmp "$EXPECTED_OUTPUT" "$OUTPUT"
