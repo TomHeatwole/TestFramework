@@ -4,9 +4,32 @@
 #include <string>
 #include <algorithm>
 #include <thread>
+#include <sstream>
 
 typedef void(*voidFunc)();
 typedef std::map<std::string, void(*)()> Tests;
+
+// For capturing the std::out and std::err during test runs
+struct TestPrinter {
+  public:
+    TestPrinter() : ss_() {
+    }
+
+    std::ostream& getStream() {
+        if (startedTestRun_) {
+            return ss_;
+        }
+        return std::cout;
+    }
+
+  void startTests() {
+      startedTestRun_ = true;
+  }
+
+  private:
+    std::stringstream ss_;
+    bool startedTestRun_ = false;
+};
 
 class TestFramework {
   public:
@@ -22,6 +45,19 @@ class TestFramework {
 
     explicit TestFramework(Tests&& tests): tests_(tests) {}
 
+    static TestPrinter& getPrinter() {
+        static TestPrinter printer;
+        return printer;
+    }
+
+    static std::ostream& getPrintStream() {
+        return getPrinter().getStream();
+    }
+
+    static void capturePrintOutput() {
+        getPrinter().startTests();
+    }
+
     void executeTests() {
         // TODO: Make this like an actual test framework spinning up test
         // environment, parallelizing operations, pretty printing results,
@@ -31,6 +67,7 @@ class TestFramework {
                 std::string("Executing ") +
                 std::to_string(tests_.size()) +
                 std::string(" tests:"));
+        // TODO: Capture print outputs from here 
         std::for_each(tests_.begin(), tests_.end(),
                 [this, &testThreads](std::pair<std::string, void(*)()> test) mutable {
             // TODO: look into batching or a max thread count w/ semaphore
@@ -86,7 +123,18 @@ class TestMap {
     }
   private:
     Tests data_;
+    TestPrinter printer_;
 };
+
+// Putting this in namespace std so we can overwrite what std::out does
+namespace std {
+struct TestFrameworkGlobalHelper_ {
+  public:
+    static ostream& getPrintStream_() {
+        return TestFramework::getPrintStream();
+    }
+};
+} // namespace std
 
 /*
  * Here's the macro magic that makes the test framework work.
@@ -126,4 +174,4 @@ int main() { \
 
 #define ASSERT(condition) TestFramework::assert_(condition)
 
-
+#define cout TestFrameworkGlobalHelper_::getPrintStream_()
