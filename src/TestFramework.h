@@ -23,24 +23,7 @@ class TestFramework {
         }
     }
 
-    static void doNothing() {}
-
     explicit TestFramework(Tests&& tests): tests_(tests) {
-    }
-
-    static TestPrinter& getOutPrinter() {
-        static TestPrinter printer(&std::cout);
-        return printer;
-    }
-
-    static TestPrinter& getErrPrinter() {
-        static TestPrinter printer(&std::cerr);
-        return printer;
-    }
-
-    static void startTests() {
-        getOutPrinter().startTests(std::this_thread::get_id());
-        getErrPrinter().startTests(std::this_thread::get_id());
     }
 
     void executeTests() {
@@ -93,6 +76,19 @@ class TestFramework {
         }
     }
 
+    static TestPrinter& getOutPrinter() {
+        static TestPrinter printer(&std::cout);
+        return printer;
+    }
+
+    static TestPrinter& getErrPrinter() {
+        static TestPrinter printer(&std::cerr);
+        return printer;
+    }
+
+    static void doNothing() {}
+
+  private:
     void printLines(std::vector<std::string> lines) {
         std::lock_guard g(printMutex_);
         std::for_each(lines.begin(), lines.end(), [](std::string line) {
@@ -104,7 +100,11 @@ class TestFramework {
         printLines({std::move(line)});
     }
 
-  private:
+    static void startTests() {
+        getOutPrinter().startTests(std::this_thread::get_id());
+        getErrPrinter().startTests(std::this_thread::get_id());
+    }
+
     Tests tests_;
     std::mutex printMutex_;
     // TODO: Use these to print total success info
