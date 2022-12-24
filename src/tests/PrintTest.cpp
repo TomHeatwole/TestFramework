@@ -18,6 +18,8 @@ TEST("PrintTest2") {
     for (size_t i = 0; i < 26; ++i) {
         std::cout << static_cast<char>('a' + i);
     }
+
+    std::cerr << "This is error text";
 }
 
 TEST("NoPrintTest2") {

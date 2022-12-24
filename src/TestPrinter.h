@@ -1,7 +1,8 @@
 // For capturing the std::out and std::err during test runs
 struct TestPrinter {
   public:
-    TestPrinter() : streamMutex_() {};
+    explicit TestPrinter(std::ostream* defaultStream)
+        : streamMutex_(), defaultStream_(defaultStream) {};
 
     // If the thread ID is for a known thread, return its
     // existing stream
@@ -23,7 +24,7 @@ struct TestPrinter {
      * just fetching streams. Use a unique_lock for threads that put new streams
      * in the map values to a stream.
      *
-     * The main thread can continue using cout.
+     * The main thread can continue using cout or err (defaultStream_).
      */
     std::ostream& getStream() {
         const auto this_id = std::this_thread::get_id();
@@ -41,7 +42,7 @@ struct TestPrinter {
             return streams.at(this_id);
         }
 
-        return std::cout;
+        return *defaultStream_;
     }
 
   void startTests(std::thread::id id) {
@@ -53,6 +54,7 @@ struct TestPrinter {
     std::unordered_map<std::thread::id, std::stringstream> streams;
     std::shared_mutex streamMutex_;
     std::thread::id mainThread_;
+    std::ostream* defaultStream_;
     bool startedTestRun_ = false;
 };
 

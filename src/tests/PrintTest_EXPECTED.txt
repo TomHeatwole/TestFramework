@@ -11,6 +11,9 @@ PrintTest2...OK
 test2
 abcdefghijklmnopqrstuvwxyz
 ------------------------
+------Test Stderr------
+This is error text
+------------------------
 NoPrintTest3...
     failed with exception: Assertion failure.
 PrintTest3...

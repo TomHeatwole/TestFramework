@@ -28,9 +28,19 @@ class TestFramework {
     explicit TestFramework(Tests&& tests): tests_(tests) {
     }
 
-    static TestPrinter& getPrinter() {
-        static TestPrinter printer;
+    static TestPrinter& getOutPrinter() {
+        static TestPrinter printer(&std::cout);
         return printer;
+    }
+
+    static TestPrinter& getErrPrinter() {
+        static TestPrinter printer(&std::cerr);
+        return printer;
+    }
+
+    static void startTests() {
+        getOutPrinter().startTests(std::this_thread::get_id());
+        getErrPrinter().startTests(std::this_thread::get_id());
     }
 
     void executeTests() {
@@ -42,8 +52,7 @@ class TestFramework {
                 std::string("Executing ") +
                 std::to_string(tests_.size()) +
                 std::string(" tests:"));
-        getPrinter().startTests(std::this_thread::get_id());
-
+        startTests();
         std::for_each(tests_.begin(), tests_.end(),
                 [this, &testThreads]
                 (std::pair<std::string, void(*)()> test) mutable {
@@ -59,11 +68,19 @@ class TestFramework {
                             std::string("    failed with exception: ")
                             + e.what());
                 }
-                auto* stream =
-                    getPrinter().getStreamForThread(std::this_thread::get_id());
-                if (stream) {
+                auto* outStream =
+                    getOutPrinter().getStreamForThread(std::this_thread::get_id());
+                if (outStream) {
                     testOutput.emplace_back("------Test Stdout------");
-                    testOutput.push_back(stream->str());
+                    testOutput.push_back(outStream->str());
+                    testOutput.emplace_back("------------------------");
+                }
+
+                auto* errStream =
+                    getErrPrinter().getStreamForThread(std::this_thread::get_id());
+                if (errStream) {
+                    testOutput.emplace_back("------Test Stderr------");
+                    testOutput.push_back(errStream->str());
                     testOutput.emplace_back("------------------------");
                 }
 
@@ -123,8 +140,12 @@ class TestMap {
 namespace std {
 struct TestFrameworkGlobalHelper_ {
   public:
-    static ostream& getPrintStream_() {
-        return TestFramework::getPrinter().getStream();
+    static ostream& getOutStream_() {
+        return TestFramework::getOutPrinter().getStream();
+    }
+
+    static ostream& getErrStream_() {
+        return TestFramework::getErrPrinter().getStream();
     }
 };
 } // namespace std
@@ -167,4 +188,6 @@ int main() { \
 
 #define ASSERT(condition) TestFramework::assert_(condition)
 
-#define cout TestFrameworkGlobalHelper_::getPrintStream_()
+#define cout TestFrameworkGlobalHelper_::getOutStream_()
+
+#define cerr TestFrameworkGlobalHelper_::getErrStream_()
