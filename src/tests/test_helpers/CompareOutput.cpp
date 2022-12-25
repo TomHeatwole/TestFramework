@@ -82,11 +82,11 @@ std::string expandColor(std::string& in) {
 
 int exitAndPrint(std::string message, OutputPtr expected, OutputPtr actual) {
     std::cout << message << std::endl << std::endl;
-    std::cout << "Expected output:" << std::endl;
+    std::cout << "Expected output:" << expected->size() << std::endl;
     for (auto& line : *expected) {
         std::cout << "    " << expandColor(line) << std::endl;
     }
-    std::cout << "\nActual output:" << std::endl;
+    std::cout << "\nActual output:" << actual->size() << std::endl;
     for (const auto& line : *actual) {
         std::cout << "    " << line << std::endl;
     }
@@ -110,7 +110,7 @@ int main(int argc, char** argv) {
     std::string topLevel = expected->at(0);
     std::vector<std::string> indented;
     for (size_t i = 1; i < expected->size(); ++i) {
-        std::string& line = expected->at(i);
+        std::string line = expected->at(i);
         // Indented
         if (line[0] == ' ') {
             indented.push_back(expandColor(line));
