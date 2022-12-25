@@ -1,6 +1,7 @@
 README
 - "Usage" explaining the 3 macros
 - "Development" explaining the meta test framework and how to use it.
+  - Also needs to explain the output color schema
 
 Core Functionality
 - Probably use 2 vectors (name, functionPtr) instead of mapping them
@@ -13,8 +14,11 @@ Core Functionality
 - Differentiate assertion failures from other exceptions or FATALs when communicating output
 
 Additional Functions
+- RunBeforeEach or CreateData or similar
 - Stress test or similar? Specify # runs for each test with concurrency options.
 - Mocking? 
+- Run specific set of tests
+  - Omit tests?
 
 Meta Test Framework
 - Does everything it needs to for now :) 

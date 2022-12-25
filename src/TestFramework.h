@@ -9,6 +9,7 @@
 #include <unordered_map>
 
 #include "TestPrinter.h"
+#include "PrintHelpers.h"
 
 typedef void(*voidFunc)();
 typedef std::map<std::string, void(*)()> Tests;
@@ -27,9 +28,6 @@ class TestFramework {
     }
 
     void executeTests() {
-        // TODO: Make this like an actual test framework spinning up test
-        // environment, parallelizing operations, pretty printing results,
-        // etc. instead of just executing test functions in series.
         std::vector<std::thread> testThreads;
         printLine(
                 std::string("Executing ") +
@@ -44,29 +42,35 @@ class TestFramework {
                 std::vector<std::string> testOutput;
                 try {
                     test.second();
-                    testOutput.push_back(test.first + std::string("...OK"));
-                } catch (std::exception &e) {
-                    testOutput.push_back(test.first + std::string("..."));
                     testOutput.push_back(
+                            print::green(test.first + std::string("...OK")));
+                } catch (std::exception &e) {
+                    testOutput.push_back(
+                            print::red(test.first + std::string("...")));
+                    testOutput.push_back(print::red(
                             std::string("    failed with exception: ")
-                            + e.what());
+                            + e.what()));
                     std::lock_guard lg(dataMutex_);
                     failed_.push_back(test.first);
                 }
                 auto* outStream =
                     getOutPrinter().getStreamForThread(std::this_thread::get_id());
                 if (outStream) {
-                    testOutput.emplace_back("------Test Stdout------");
+                    testOutput.emplace_back(
+                            print::yellow("------Test Stdout-------"));
                     testOutput.push_back(outStream->str());
-                    testOutput.emplace_back("------------------------");
+                    testOutput.emplace_back(
+                            print::yellow("------------------------"));
                 }
 
                 auto* errStream =
                     getErrPrinter().getStreamForThread(std::this_thread::get_id());
                 if (errStream) {
-                    testOutput.emplace_back("------Test Stderr------");
+                    testOutput.emplace_back(
+                            print::yellow("------Test Stderr-------"));
                     testOutput.push_back(errStream->str());
-                    testOutput.emplace_back("------------------------");
+                    testOutput.emplace_back(
+                            print::yellow("------------------------"));
                 }
 
                 printLines(testOutput);
@@ -82,17 +86,24 @@ class TestFramework {
         size_t numTests = tests_.size();
         size_t numFailed = failed_.size();
         if (numFailed == 0) {
-            std::cout << "All " << std::to_string(numTests)
-                << " tests passed!\n";
+            std::cout << print::boldGreen(std::string("All ")
+                + std::to_string(numTests)
+                + std::string(" tests passed!")) << std::endl;
         } else {
-            std::cout << std::to_string(numTests - numFailed) << " of "
-                << numTests << " tests passed.\n";
+            std::string result = std::to_string(numTests - numFailed)
+                + std::string(" of ")
+                + std::to_string(numTests)
+                + std::string(" tests passed.");
+            std::cout << (numFailed < numTests
+                ? print::boldYellow(result)
+                : print::boldRed(result)) << std::endl;
             std::cout << "The following tests failed:\n";
 
             // Print faild in consistent order
             std::sort(failed_.begin(), failed_.end());
             for (const auto& name : failed_) {
-                std::cout << "    " << name << std::endl;
+                std::cout << print::red(std::string("    ") + name)
+                    << std::endl;
             }
         }
     }
