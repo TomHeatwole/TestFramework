@@ -3,7 +3,7 @@
 TEST_FILE
 
 TEST("NoPrintTest") {
-    ASSERT(true);
+    ASSERT_TRUE(true);
 }
 
 TEST("PrintTest") {
@@ -23,16 +23,16 @@ TEST("PrintTest2") {
 }
 
 TEST("NoPrintTest2") {
-    ASSERT(true);
+    ASSERT_TRUE(true);
 }
 
 TEST("PrintTest3") {
     std::cout << "Third print test" << std::endl;
-    ASSERT(false);
+    ASSERT_TRUE(false);
 }
 
 TEST("NoPrintTest3") {
-    ASSERT(false);
+    ASSERT_TRUE(false);
 }
 
 

@@ -3,7 +3,7 @@
 TEST_FILE
 
 TEST("FailedAssertion") {
-    ASSERT(false);
+    ASSERT_TRUE(false, "This really shoulda been true!");
 }
 
 END_TEST_FILE

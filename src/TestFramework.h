@@ -10,20 +10,13 @@
 
 #include "TestPrinter.h"
 #include "PrintHelpers.h"
+#include "Assert.h"
 
 typedef void(*voidFunc)();
 typedef std::map<std::string, void(*)()> Tests;
 
 class TestFramework {
   public:
-    static void assert_(bool condition) {
-        if (!condition) {
-            // TODO: Create assertion error classes
-            // TODO: Improve error messaging
-            throw std::runtime_error("Assertion failure.");
-        }
-    }
-
     explicit TestFramework(Tests&& tests): tests_(tests) {
     }
 
@@ -44,6 +37,13 @@ class TestFramework {
                     test.second();
                     testOutput.push_back(
                             print::green(test.first + std::string("...OK")));
+                } catch (assert::assertion_error &e) {
+                    testOutput.push_back(
+                            print::red(test.first + std::string("...")));
+                    testOutput.push_back(
+                            print::red(std::string("    ") + e.what()));
+                    std::lock_guard lg(dataMutex_);
+                    failed_.push_back(test.first);
                 } catch (std::exception &e) {
                     testOutput.push_back(
                             print::red(test.first + std::string("...")));
@@ -202,8 +202,6 @@ struct TestFrameworkGlobalHelper_ {
 #define END_TEST_FILE ); \
     return std::move(tests_); \
 } 
-
-#define ASSERT(condition) TestFramework::assert_(condition)
 
 #define cout TestFrameworkGlobalHelper_::getOutStream_()
 

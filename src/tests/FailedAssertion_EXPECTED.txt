@@ -1,6 +1,7 @@
 Executing 1 tests:
 FailedAssertion...%RED%
-    failed with exception: Assertion failure.%RED%
+    Failed asserting that 0 is True.%RED%
+    Test detail: This really shoulda been true!%RED%
 
 0 of 1 tests passed.%BOLD_RED%
 The following tests failed:

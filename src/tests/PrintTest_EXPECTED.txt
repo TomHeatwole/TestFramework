@@ -15,9 +15,9 @@ abcdefghijklmnopqrstuvwxyz
 This is error text
 ------------------------%YELLOW%
 NoPrintTest3...%RED%
-    failed with exception: Assertion failure.%RED%
+    Failed asserting that 0 is True.%RED%
 PrintTest3...%RED%
-    failed with exception: Assertion failure.%RED%
+    Failed asserting that 0 is True.%RED%
 ------Test Stdout-------%YELLOW%
 Third print test
 

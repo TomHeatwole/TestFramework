@@ -82,11 +82,11 @@ std::string expandColor(std::string& in) {
 
 int exitAndPrint(std::string message, OutputPtr expected, OutputPtr actual) {
     std::cout << message << std::endl << std::endl;
-    std::cout << "Expected output:" << expected->size() << std::endl;
+    std::cout << "Expected output:" << std::endl;
     for (auto& line : *expected) {
         std::cout << "    " << expandColor(line) << std::endl;
     }
-    std::cout << "\nActual output:" << actual->size() << std::endl;
+    std::cout << "\nActual output:" << std::endl;
     for (const auto& line : *actual) {
         std::cout << "    " << line << std::endl;
     }

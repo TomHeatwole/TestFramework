@@ -75,7 +75,7 @@ std::string decorate(
             newLinePtr = in.find(newLinePtr, '\n')) {
         out << prefix.str() << in.substr(prevPtr, newLinePtr - prevPtr)
             << "\033[0m\n";
-        prevPtr = newLinePtr;
+        prevPtr = newLinePtr + 1;
     }
 
     out << prefix.str() << in.substr(prevPtr, in.size() - prevPtr) << "\033[0m";
