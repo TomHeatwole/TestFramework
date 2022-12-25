@@ -94,7 +94,6 @@ int exitAndPrint(std::string message, OutputPtr expected, OutputPtr actual) {
     return 1;
 }
 
-
 int main(int argc, char** argv) {
     if (argc != 3) {
         throw std::runtime_error("Expected exactly 2 outputs to comapre");

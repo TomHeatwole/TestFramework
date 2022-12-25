@@ -6,6 +6,7 @@ BasicTest
 DuplicateNameTest
 FailedAssertion
 PrintTest
+AssertTest
 "
 
 declare -i total=0
