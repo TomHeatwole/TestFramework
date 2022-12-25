@@ -5,7 +5,6 @@ README
 
 Core Functionality
 - Probably use 2 vectors (name, functionPtr) instead of mapping them
-- Pretty print?
 - Assert functions
     - Allow string input for more detail
     - Also Expect functions?
@@ -19,6 +18,7 @@ Additional Functions
 - Mocking? 
 - Run specific set of tests
   - Omit tests?
+- Any other CLI flags? Write to file? 
 
 Meta Test Framework
 - Does everything it needs to for now :) 

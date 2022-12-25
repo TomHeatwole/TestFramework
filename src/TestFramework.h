@@ -191,9 +191,7 @@ struct TestFrameworkGlobalHelper_ {
  */
 
 // Create test class and start writing executeTests_ function
-#define TEST_FILE class TestClass_ { \
-  public: \
-    static TestMap getTestMap() { \
+#define TEST_FILE TestMap TestClass_::getTestMap() { \
         TestMap tests_; \
         TestFramework::doNothing(
 
@@ -203,22 +201,29 @@ struct TestFrameworkGlobalHelper_ {
 // Close previous test, return, add main method for execution
 #define END_TEST_FILE ); \
     return std::move(tests_); \
-} \
-}; \
-int main() { \
-    try { \
-        TestFramework t(TestClass_::getTestMap().getTests()); \
-        t.executeTests(); \
-    } catch (std::exception& e) { \
-        std::cout << "Tests did not execute properly, with error:\n    " \
-            << e.what() << std::endl; \
-        return 1; \
-    } \
-    return 0; \
-}
+} 
 
 #define ASSERT(condition) TestFramework::assert_(condition)
 
 #define cout TestFrameworkGlobalHelper_::getOutStream_()
 
 #define cerr TestFrameworkGlobalHelper_::getErrStream_()
+
+// Create stub class for TestClass_ and call it from main
+class TestClass_ {
+  public:
+    static TestMap getTestMap();
+};
+
+int main() {
+    try {
+        TestFramework t(TestClass_::getTestMap().getTests());
+        t.executeTests();
+    } catch (std::exception& e) {
+        std::cout << "Tests did not execute properly, with error:\n    "
+            << e.what() << std::endl;
+        return 1;
+    }
+    return 0;
+}
+
