@@ -158,7 +158,7 @@ int main(int argc, char** argv) {
         }
         const auto& indented = groups.at(topLevel);
         for (size_t i = 0; i < indented.size(); ++i) {
-            if (actualPtr == actual->size()) {
+            if (actualPtr == actual->size() - 1) {
                 return exitAndPrint(
                         build_string({
                             "Output ended before expected line: \"",
