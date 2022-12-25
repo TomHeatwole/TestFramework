@@ -1,5 +1,0 @@
-"------Test Stdout-------"
-    shortly after "PrintTest...OK"
-     Expected: "------Test Stdout------"
-
-
