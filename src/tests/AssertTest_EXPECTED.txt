@@ -1,11 +1,15 @@
-Executing 2 tests:
+Executing 3 tests:
 AssertFalse...%RED%
     Failed asserting that 1 is False.%RED%
     Test detail: lol%RED%
 AssertTrue...%RED%
     Failed asserting that 0 is True.%RED%
+AssertEqual...%RED%
+    Failed asserting that two values are equal.%RED%
 
-0 of 2 tests passed.%BOLD_RED%
+
+0 of 3 tests passed.%BOLD_RED%
 The following tests failed:
+    AssertEqual%RED%
     AssertFalse%RED%
     AssertTrue%RED%
