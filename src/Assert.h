@@ -33,10 +33,6 @@ void assertFalse_(bool condition, std::string customMessage="") {
 }
 
 template <typename T>
-void assertEqualWithoutPrint_(T val1, T val2, std::string customMessage="") {
-}
-
-template <typename T>
 // TODO: Figure out a good way to print the printable values without throwing
 // on the non-printable values
 void assertEqual_(T val1, T val2, std::string customMessage="") {
